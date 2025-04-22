@@ -1,0 +1,20 @@
+{
+  "name": "google_s2s_example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@jambonz/node-client-ws": "^0.1.79",
+    "axios": "^1.8.4",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "pino": "^9.6.0"
+  }
+}
