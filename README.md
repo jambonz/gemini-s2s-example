@@ -43,6 +43,20 @@ When configuring your Jambonz application, point the WebSocket URL to:
 wss://your-server-address/google-s2s
 ```
 
+## Testing with MCP Server Tools
+
+If you want to test with MCP server tools, you need to open two terminals:
+
+In the first terminal, run:
+```sh
+MCP_SERVER_PORT=3001 npm run mcp-server
+```
+
+In the second terminal, run:
+```sh
+GOOGLE_API_KEY=<your key> MCP_SERVER_URL='http://<your server address>:3001/sse' node app.js
+```
+
 ## Additional Resources
 - [Jambonz Documentation](https://docs.jambonz.org/)
 - [Google Gemini API Documentation](https://ai.google.dev/docs)

@@ -4,17 +4,20 @@
   "main": "index.js",
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "mcp-server": "node mcp/weather-mcp-server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@jambonz/node-client-ws": "^0.1.79",
+    "@jambonz/node-client-ws": "^0.2.1",
+    "@modelcontextprotocol/sdk": "^1.8.0",
     "axios": "^1.8.4",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "pino": "^9.6.0"
+    "pino": "^9.6.0",
+    "zod": "^3.24.2"
   }
 }
