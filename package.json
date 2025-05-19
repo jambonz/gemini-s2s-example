@@ -12,7 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@jambonz/node-client-ws": "^0.2.0",
+    "@jambonz/node-client-ws": "^0.2.1",
     "@modelcontextprotocol/sdk": "^1.8.0",
     "axios": "^1.8.4",
     "dotenv": "^16.5.0",
