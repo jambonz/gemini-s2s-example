@@ -1,62 +1,121 @@
 # Google Speech-to-Speech Example
 
-This is an example jambonz application that connects to Google's Gemini API and illustrates how to build a Voice-AI application using jambonz and Google's speech services.
+Example jambonz application showcasing voice AI built on Google's Gemini Live API. Two routes are included:
 
-## Authentication
-You must have a Google API key that has access to the Gemini API. Specify it as an environment variable when starting the application.
+| Route | Endpoint | Auth |
+|---|---|---|
+| **Gemini Developer API** | `wss://your-server/google-s2s` | API key from [Google AI Studio](https://aistudio.google.com/apikey) |
+| **Vertex AI Live API** | `wss://your-server/vertex-s2s` | OAuth (service-account JSON) |
 
-```bash
-GOOGLE_API_KEY="GEMINI LIVE API KEY" npm start
-```
+Both routes share the same agent logic (`weather-shared.js`) — they differ only in endpoint and auth.
 
 ## Prerequisites
-- Node.js (v14 or later)
+- Node.js v18+
 - A Jambonz account
-- Google Cloud Platform account with Gemini API access enabled
+- One of:
+  - A Gemini API key (AI Studio), OR
+  - A Google Cloud project with Vertex AI enabled + a service-account JSON key with `roles/aiplatform.user`
 
-## How It Works
-This application establishes a WebSocket connection between jambonz and Google's speech services. When a call comes in, the application:
-1. Answers the call
-2. Connects to Google's Gemini API 
+## Install
 
-## Configuration
-All of the configuration can be found in the WebSocket handler file. This is where you'll want to make changes as you experiment with this example.
-
-The application uses jambonz's WebSocket capabilities to create a bidirectional stream with Google's speech services. We specify the language model, voice parameters, and other Gemini-specific settings in the configuration.
-
-## Function Calling
-The example demonstrates how to implement custom functions that the AI can call during conversation. These functions can access external services, databases, or APIs to retrieve information requested by the user.
-
-## Interruption Handling
-When a user speaks while the assistant is talking (barge-in), the application detects this and can cancel the current response, allowing for more natural conversation flow.
-
-## Events
-The application handles various events from both jambonz and Google's API, including:
-- Speech recognition events
-- Text generation events
-- Audio playback events
-- Error handling events
-
-## WebSocket Endpoint
-When configuring your Jambonz application, point the WebSocket URL to:
-```
-wss://your-server-address/google-s2s
+```bash
+npm install
 ```
 
-## Testing with MCP Server Tools
+## Run
 
-If you want to test with MCP server tools, you need to open two terminals:
+### Gemini Developer API route (`/google-s2s`)
 
-In the first terminal, run:
-```sh
+Required env var:
+
+```bash
+GEMINI_API_KEY=AIza... npm start
+```
+
+Optional:
+
+| Var | Default |
+|---|---|
+| `GEMINI_MODEL` | `models/gemini-3.1-flash-live-preview` |
+
+### Vertex AI Live API route (`/vertex-s2s`)
+
+Required env var:
+
+```bash
+GOOGLE_SERVICE_ACCOUNT_KEY_PATH=/abs/path/to/sa-key.json npm start
+```
+
+Optional:
+
+| Var | Default |
+|---|---|
+| `VERTEX_PROJECT_ID` | `project_id` field inside the JSON |
+| `VERTEX_LOCATION` | `us-central1` |
+| `VERTEX_MODEL` | `gemini-live-2.5-flash-native-audio` |
+
+The Vertex route mints a fresh OAuth access token (`ya29.…`) from the service-account JSON each session. mod_google_s2s detects the `ya29.` prefix and sends it as `Authorization: Bearer …` on the WebSocket upgrade.
+
+### Both routes at once
+
+Set both env vars — each route handles its own endpoint independently:
+
+```bash
+GEMINI_API_KEY=AIza... \
+GOOGLE_SERVICE_ACCOUNT_KEY_PATH=/abs/path/to/sa-key.json \
+npm start
+```
+
+## Configuring Jambonz application
+
+Point your Jambonz application's WebSocket URL at the route you want:
+
+```
+wss://your-server/google-s2s     # Gemini Developer
+wss://your-server/vertex-s2s     # Vertex AI
+```
+
+## How it works
+
+When a call comes in:
+
+1. The app answers the call.
+2. Mints credential (API key passthrough for Gemini, or OAuth token from JSON for Vertex).
+3. Runs the `llm` verb, which tells feature-server / FreeSWITCH to open a WebSocket to Google.
+4. Sends a `setup` payload with system instruction + tools (weather function).
+5. Gemini greets the caller; conversation flows bidirectionally.
+
+## Function calling
+
+The example wires a `get_weather` tool. When the model invokes it, `weather-shared.js` calls the weather utility and returns the result back into the conversation.
+
+## MCP server tools (optional)
+
+Run the MCP server in a separate terminal:
+
+```bash
 MCP_SERVER_PORT=3001 npm run mcp-server
 ```
 
-In the second terminal, run:
-```sh
-GOOGLE_API_KEY=<your key> MCP_SERVER_URL='http://<your server address>:3001/sse' node app.js
+Then start the app with `MCP_SERVER_URL` pointing at it:
+
+```bash
+GEMINI_API_KEY=AIza... \
+MCP_SERVER_URL='http://localhost:3001/sse' \
+npm start
 ```
 
-## Additional Resources
-- [Jambonz Documentation](https://docs.jambonz.org/)
-- [Google Gemini API Documentation](https://ai.google.dev/docs)
+When `MCP_SERVER_URL` is set, the built-in `get_weather` tool is replaced by tools advertised from the MCP server.
+
+## Secrets
+
+- Never commit your API key or service-account JSON.
+- Source credentials only from env vars; the routes refuse to run if env is missing.
+- For production, store the service-account JSON outside the repo and reference its path via `GOOGLE_SERVICE_ACCOUNT_KEY_PATH`.
+
+## Additional resources
+
+- [Jambonz documentation](https://docs.jambonz.org/)
+- [Gemini Live API (AI Studio)](https://ai.google.dev/api/live)
+- [Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+- [Vertex AI service-account setup](https://cloud.google.com/vertex-ai/docs/authentication)
